@@ -54,12 +54,19 @@ async function iniciarAutomacaoEnxuta() {
     position: fixed; bottom: 20px; right: 20px; z-index: 999999;
     background: #ee4d2d; color: #fff; padding: 12px 18px;
     border-radius: 8px; font-family: Arial, sans-serif; font-size: 13px;
-    font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3); max-width: 400px;
+    font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3); max-width: 420px;
   `;
-  banner.textContent = "SPX: Lendo Coluna A...";
+  banner.textContent = "SPX: Iniciando leitura na A2...";
   document.body.appendChild(banner);
 
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+  function obterFormulaInput() {
+    return document.querySelector("#t-formula-bar-input .cell-input") ||
+           document.querySelector(".cell-input[aria-label]") ||
+           document.querySelector("#t-formula-bar-input [contenteditable='true']") ||
+           document.querySelector("#t-formula-bar-input");
+  }
 
   async function irParaCelula(refCelula) {
     const nameBox = document.getElementById("t-name-box") || document.querySelector(".waffle-name-box input");
@@ -67,32 +74,41 @@ async function iniciarAutomacaoEnxuta() {
 
     nameBox.focus();
     nameBox.select();
-    document.execCommand("insertText", false, refCelula);
+    nameBox.value = refCelula;
     nameBox.dispatchEvent(new Event("input", { bubbles: true }));
     nameBox.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true }));
-    await sleep(170);
+    nameBox.dispatchEvent(new KeyboardEvent("keyup", { key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true }));
+    await sleep(220);
   }
 
   function lerValorCelulaAtual() {
-    let textoCopiado = "";
-    const onCopy = (e) => {
-      if (e.clipboardData) textoCopiado = e.clipboardData.getData("text/plain") || "";
-    };
-    document.addEventListener("copy", onCopy, true);
-    try { document.execCommand("copy"); } finally { document.removeEventListener("copy", onCopy, true); }
-    if (textoCopiado.trim()) return textoCopiado.trim();
-
-    const formulaInput = document.querySelector("#t-formula-bar-input .cell-input") ||
-                         document.querySelector(".cell-input[aria-label]") ||
-                         document.querySelector("#t-formula-bar-input");
-    return formulaInput ? (formulaInput.innerText || formulaInput.textContent || "").trim() : "";
+    const formulaInput = obterFormulaInput();
+    if (!formulaInput) return "";
+    const bruto = (formulaInput.innerText || formulaInput.textContent || "").replace(/\u200B/g, "").trim();
+    return bruto;
   }
 
-  function colarTexto(texto) {
-    const alvo = document.querySelector(".grid-container") || document.activeElement || document.body;
-    const dt = new DataTransfer();
-    dt.setData("text/plain", texto);
-    alvo.dispatchEvent(new ClipboardEvent("paste", { clipboardData: dt, bubbles: true, cancelable: true }));
+  async function escreverNaCelula(refCelula, texto) {
+    await irParaCelula(refCelula);
+    const formulaInput = obterFormulaInput();
+    if (!formulaInput) throw new Error("Barra de fórmulas não encontrada.");
+
+    formulaInput.focus();
+    await sleep(40);
+
+    const sel = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(formulaInput);
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    document.execCommand("insertText", false, texto);
+    formulaInput.dispatchEvent(new Event("input", { bubbles: true }));
+    await sleep(50);
+
+    formulaInput.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true }));
+    formulaInput.dispatchEvent(new KeyboardEvent("keyup", { key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true }));
+    await sleep(160);
   }
 
   let linha = 2;
@@ -107,6 +123,7 @@ async function iniciarAutomacaoEnxuta() {
 
       if (!valorA) {
         vaziasSeguidas++;
+        banner.textContent = `Linha ${linha}: vazia (${vaziasSeguidas}/5)...`;
         linha++;
         continue;
       }
@@ -137,16 +154,12 @@ async function iniciarAutomacaoEnxuta() {
         const cols = ["B", "C", "D", "E"];
         for (let i = 0; i < cols.length; i++) {
           const valLimpo = String(resposta.dados[i] ?? "").replace(/[\r\n\t]+/g, " ").trim();
-          await irParaCelula(`${cols[i]}${linha}`);
-          colarTexto(valLimpo);
-          await sleep(120);
+          await escreverNaCelula(`${cols[i]}${linha}`, valLimpo);
         }
         processados++;
       } else {
         const msgErro = resposta && resposta.erro ? resposta.erro : "Falha na consulta";
-        await irParaCelula(`B${linha}`);
-        colarTexto(`Erro: ${msgErro}`);
-        await sleep(120);
+        await escreverNaCelula(`B${linha}`, `Erro: ${msgErro}`);
       }
 
       linha++;
