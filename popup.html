@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <style>
-    body { width: 310px; font-family: Arial, sans-serif; padding: 14px; margin: 0; background: #f8fafc; color: #1e293b; }
+    body { width: 320px; font-family: Arial, sans-serif; padding: 14px; margin: 0; background: #f8fafc; color: #1e293b; }
     .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
     .title { font-size: 14px; font-weight: bold; color: #ee4d2d; }
     .badge { font-size: 11px; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
@@ -17,8 +17,8 @@
 </head>
 <body>
   <div class="header">
-    <span class="title">SPX • Auditoria Enxuta</span>
-    <span class="badge" id="versaoAtualBadge">v3.0</span>
+    <span class="title">SPX • Auditoria BR</span>
+    <span class="badge" id="versaoAtualBadge">v3.3</span>
   </div>
 
   <div id="avisoAtualizacao">
@@ -27,8 +27,8 @@
     <a id="linkDownloadVersao" href="#" target="_blank">Baixar Atualização no GitHub</a>
   </div>
 
-  <button id="btnIniciar">Preencher BRs Colados (B:E)</button>
-  <div id="status">Mantenha a aba do SPX logada na mesma janela e cole os BRs na Coluna A.</div>
+  <button id="btnIniciar">Auditar Novos BRs (B:E)</button>
+  <div id="status">Pula linhas já preenchidas e grava os novos BRs linha a linha.</div>
 
   <script src="popup.js"></script>
 </body>
