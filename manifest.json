@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "SPX - Auditoria Direta Google Sheets",
-  "version": "3.0",
+  "version": "3.1",
   "description": "Auditoria enxuta de rastreio SPX (Status, On-Hold, Missing e Perfil) no Google Sheets",
   "permissions": [
     "activeTab",
