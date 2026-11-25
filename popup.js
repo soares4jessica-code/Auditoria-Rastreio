@@ -31,18 +31,18 @@ document.getElementById("btnIniciar").addEventListener("click", async () => {
   }
 
   btn.disabled = true;
-  statusEl.textContent = "Iniciando leitura dos BRs na planilha...";
+  statusEl.textContent = "Iniciando auditoria (pulando já preenchidos)...";
   statusEl.style.color = "#188038";
 
   chrome.scripting.executeScript({
     target: { tabId: tab.id },
-    func: iniciarAutomacaoEnxuta
+    func: iniciarAuditoriaNovosBR
   });
 
   setTimeout(() => window.close(), 700);
 });
 
-async function iniciarAutomacaoEnxuta() {
+async function iniciarAuditoriaNovosBR() {
   if (window.__spxRodando) {
     alert("A auditoria já está rodando nesta aba!");
     return;
@@ -54,12 +54,13 @@ async function iniciarAutomacaoEnxuta() {
     position: fixed; bottom: 20px; right: 20px; z-index: 999999;
     background: #ee4d2d; color: #fff; padding: 12px 18px;
     border-radius: 8px; font-family: Arial, sans-serif; font-size: 13px;
-    font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3); max-width: 420px;
+    font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3); max-width: 450px;
   `;
-  banner.textContent = "SPX: Iniciando leitura na A2...";
+  banner.textContent = "SPX: Verificando linhas já preenchidas...";
   document.body.appendChild(banner);
 
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+  const regexCodigoBR = /^BR[A-Z0-9](6,)$/i;
 
   function obterFormulaInput() {
     return document.querySelector("#t-formula-bar-input .cell-input") ||
@@ -78,14 +79,13 @@ async function iniciarAutomacaoEnxuta() {
     nameBox.dispatchEvent(new Event("input", { bubbles: true }));
     nameBox.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true }));
     nameBox.dispatchEvent(new KeyboardEvent("keyup", { key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true }));
-    await sleep(220);
+    await sleep(170);
   }
 
   function lerValorCelulaAtual() {
     const formulaInput = obterFormulaInput();
     if (!formulaInput) return "";
-    const bruto = (formulaInput.innerText || formulaInput.textContent || "").replace(/\u200B/g, "").trim();
-    return bruto;
+    return (formulaInput.innerText || formulaInput.textContent || "").replace(/\u200B/g, "").trim();
   }
 
   async function escreverNaCelula(refCelula, texto) {
@@ -94,7 +94,7 @@ async function iniciarAutomacaoEnxuta() {
     if (!formulaInput) throw new Error("Barra de fórmulas não encontrada.");
 
     formulaInput.focus();
-    await sleep(40);
+    await sleep(30);
 
     const sel = window.getSelection();
     const range = document.createRange();
@@ -104,70 +104,82 @@ async function iniciarAutomacaoEnxuta() {
 
     document.execCommand("insertText", false, texto);
     formulaInput.dispatchEvent(new Event("input", { bubbles: true }));
-    await sleep(50);
+    await sleep(40);
 
     formulaInput.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true }));
     formulaInput.dispatchEvent(new KeyboardEvent("keyup", { key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true }));
-    await sleep(160);
+    await sleep(120);
   }
 
   let linha = 2;
   let vaziasSeguidas = 0;
   let processados = 0;
-  let pulados = 0;
+  let ignoradosNaoBR = 0;
+  let puladosJaPreenchidos = 0;
 
   try {
     while (vaziasSeguidas < 5) {
       await irParaCelula(`A${linha}`);
-      const valorA = lerValorCelulaAtual().toUpperCase();
+      const valorA = lerValorCelulaAtual().toUpperCase().replace(/\s+/g, "");
 
       if (!valorA) {
         vaziasSeguidas++;
-        banner.textContent = `Linha ${linha}: vazia (${vaziasSeguidas}/5)...`;
         linha++;
         continue;
       }
       vaziasSeguidas = 0;
 
-      if (!valorA.startsWith("BR")) {
+      if (!regexCodigoBR.test(valorA)) {
+        ignoradosNaoBR++;
+        banner.textContent = `Linha ${linha}: Não é BR (ignorado) | Novos: ${processados}`;
         linha++;
         continue;
       }
 
-      await irParaCelula(`B${linha}`);
-      const valorB = lerValorCelulaAtual();
+      // Checa B, C, D e E: se qualquer coluna de resultado já tiver conteúdo válido, pula a linha inteira
+      const cols = ["B", "C", "D", "E"];
+      let jaTemResultado = false;
+      for (const col of cols) {
+        await irParaCelula(`${col}${linha}`);
+        const valCol = lerValorCelulaAtual();
+        if (valCol && !valCol.startsWith("Erro:")) {
+          jaTemResultado = true;
+          break;
+        }
+      }
 
-      if (valorB && !valorB.startsWith("Erro:")) {
-        pulados++;
-        banner.textContent = `Linha ${linha} (${valorA}): Já auditado (${pulados} pulados)...`;
+      if (jaTemResultado) {
+        puladosJaPreenchidos++;
+        banner.textContent = `Linha ${linha} (${valorA}): Já preenchido (${puladosJaPreenchidos} pulados)...`;
         linha++;
         continue;
       }
 
-      banner.textContent = `Linha ${linha}: Consultando ${valorA}...`;
+      banner.textContent = `Linha ${linha}: Consultando ${valorA} no SPX...`;
 
       const resposta = await new Promise((resolve) => {
         chrome.runtime.sendMessage({ action: "CONSULTAR_SPX", shipmentId: valorA }, (res) => resolve(res));
       });
 
       if (resposta && resposta.sucesso && Array.isArray(resposta.dados)) {
-        const cols = ["B", "C", "D", "E"];
         for (let i = 0; i < cols.length; i++) {
           const valLimpo = String(resposta.dados[i] ?? "").replace(/[\r\n\t]+/g, " ").trim();
           await escreverNaCelula(`${cols[i]}${linha}`, valLimpo);
         }
         processados++;
+        banner.textContent = `Linha ${linha} (${valorA}) gravada! Total novos: ${processados}`;
       } else {
         const msgErro = resposta && resposta.erro ? resposta.erro : "Falha na consulta";
         await escreverNaCelula(`B${linha}`, `Erro: ${msgErro}`);
+        banner.textContent = `Linha ${linha} (${valorA}): ${msgErro}`;
       }
 
       linha++;
     }
 
     banner.style.background = "#188038";
-    banner.textContent = `Concluído! ${processados} atualizados | ${pulados} já preenchidos.`;
-    setTimeout(() => banner.remove(), 6000);
+    banner.textContent = "Concluído! " + processados + " novos BRs | " + puladosJaPreenchidos + " já preenchidos pulados | " + ignoradosNaoBR + " não-BR ignorados.";
+    setTimeout(() => banner.remove(), 8000);
   } catch (err) {
     banner.style.background = "#d93025";
     banner.textContent = `Parado na linha ${linha}: ${err.message}`;
