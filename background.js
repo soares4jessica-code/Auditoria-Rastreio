@@ -74,10 +74,8 @@ function processarDadosEnxutos(jsonTrack, jsonExc, jsonTrade) {
   const eventos = extrairEventos(data.tracking_list || []);
   eventos.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
 
-  // COLUNA B: Status Atual
   const statusAtual = eventos.length > 0 ? formatarEvento(eventos[eventos.length - 1]) : "Sem registros";
 
-  // COLUNA C: On-Hold & Retorno SPX
   let ultimoIndexSaida = -1;
   let ultimoMotorista = "";
   let ultimoOnHold = "";
@@ -114,7 +112,6 @@ function processarDadosEnxutos(jsonTrack, jsonExc, jsonTrade) {
     }
   }
 
-  // COLUNA D: Situação Missing
   let qtdMissing = 0;
   let ultimoIdxMissing = -1;
   eventos.forEach((ev, idx) => {
@@ -136,7 +133,6 @@ function processarDadosEnxutos(jsonTrack, jsonExc, jsonTrade) {
     }
   }
 
-  // COLUNA E: Ocorrências & Perfil
   const alertas = [];
   if (data.damaged_tag === 1) alertas.push("Avaria");
   if (data.is_intercepted === 1 || data.intercept_status === 1) alertas.push("Interceptado");
