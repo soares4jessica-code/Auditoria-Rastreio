@@ -3,22 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <style>
-    body { width: 320px; font-family: Arial, sans-serif; padding: 14px; margin: 0; background: #f8fafc; color: #1e293b; }
+    body { width: 340px; font-family: Arial, sans-serif; padding: 14px; margin: 0; background: #f8fafc; color: #1e293b; }
     .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
     .title { font-size: 14px; font-weight: bold; color: #ee4d2d; }
     .badge { font-size: 11px; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
     #avisoAtualizacao { display: none; background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 8px; border-radius: 6px; font-size: 12px; margin-bottom: 10px; }
     #linkDownloadVersao { display: inline-block; margin-top: 6px; background: #ee4d2d; color: #fff; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 11px; }
+    label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 4px; color: #475569; }
+    textarea { width: 100%; box-sizing: border-box; height: 95px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; font-family: monospace; font-size: 12px; resize: vertical; margin-bottom: 8px; }
     button { width: 100%; padding: 10px; background: #ee4d2d; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
     button:hover { background: #d73211; }
     button:disabled { background: #94a3b8; cursor: not-allowed; }
-    #status { margin-top: 10px; font-size: 12px; line-height: 1.4; }
+    #status { margin-top: 8px; font-size: 12px; line-height: 1.4; }
   </style>
 </head>
 <body>
   <div class="header">
-    <span class="title">SPX • Auditoria BR</span>
-    <span class="badge" id="versaoAtualBadge">v3.3</span>
+    <span class="title">SPX • Auditoria Direta</span>
+    <span class="badge" id="versaoAtualBadge">v4.4</span>
   </div>
 
   <div id="avisoAtualizacao">
@@ -27,8 +29,11 @@
     <a id="linkDownloadVersao" href="#" target="_blank">Baixar Atualização no GitHub</a>
   </div>
 
-  <button id="btnIniciar">Auditar Novos BRs (B:E)</button>
-  <div id="status">Pula linhas já preenchidas e grava os novos BRs linha a linha.</div>
+  <label for="listaBRs">Cole os códigos BR aqui (ou copie a coluna A antes):</label>
+  <textarea id="listaBRs" placeholder="BR268508179709T&#10;BR2610594678541&#10;..."></textarea>
+
+  <button id="btnIniciar">Consultar SPX e Copiar Resultado (B:E)</button>
+  <div id="status">Após consultar, os dados B:E vão direto para o seu Ctrl+V (basta colar em B2!).</div>
 
   <script src="popup.js"></script>
 </body>
