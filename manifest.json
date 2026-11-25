@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "SPX - Auditoria Direta Google Sheets",
+  "version": "3.0",
+  "description": "Auditoria enxuta de rastreio SPX (Status, On-Hold, Missing e Perfil) no Google Sheets",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://spx.shopee.com.br/*",
+    "https://*.shopee.com.br/*",
+    "https://docs.google.com/spreadsheets/*",
+    "https://raw.githubusercontent.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Auditar Planilha SPX"
+  }
+}
