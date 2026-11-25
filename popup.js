@@ -1,4 +1,4 @@
-const URL_VERSION_JSON = "https://raw.githubusercontent.com/SEU-USUARIO/Auditoria-Rastreio/main/version.json";
+const URL_VERSION_JSON = "https://raw.githubusercontent.com/soares4jessica-code/Auditoria-Rastreio/main/version.json";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const versaoLocal = chrome.runtime.getManifest().version;
@@ -95,7 +95,6 @@ async function iniciarAutomacaoEnxuta() {
     alvo.dispatchEvent(new ClipboardEvent("paste", { clipboardData: dt, bubbles: true, cancelable: true }));
   }
 
-  // Altere para 3 caso os seus códigos BR comecem na linha 3
   let linha = 2;
   let vaziasSeguidas = 0;
   let processados = 0;
@@ -135,11 +134,9 @@ async function iniciarAutomacaoEnxuta() {
       });
 
       if (resposta && resposta.sucesso && Array.isArray(resposta.dados)) {
-        // Preenche apenas B, C, D e E, preservando F e G (fórmulas)
         const cols = ["B", "C", "D", "E"];
         for (let i = 0; i < cols.length; i++) {
-          const valLimpo = String(resposta.dados[i] ?? "").replace(/[
-	]+/g, " ").trim();
+          const valLimpo = String(resposta.dados[i] ?? "").replace(/[\r\n\t]+/g, " ").trim();
           await irParaCelula(`${cols[i]}${linha}`);
           colarTexto(valLimpo);
           await sleep(120);
