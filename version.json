@@ -1,6 +1,6 @@
 {
-  "version": "3.0",
+  "version": "3.1",
   "release_date": "2026-11-24",
-  "notes": "Layout enxuto (Colunas B:E), foco em On-Hold/Retorno de Motorista e alerta de atualização via GitHub.",
+  "notes": "Correção de leitura e escrita direta pela barra de fórmulas do Google Sheets (compatível com Canvas).",
   "download_url": "https://github.com/soares4jessica-code/Auditoria-Rastreio/releases/latest"
 }
