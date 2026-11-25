@@ -1,6 +1,6 @@
 {
-  "version": "3.3",
-  "release_date": "2026-11-24",
-  "notes": "Pula qualquer linha já preenchida em B:E e grava apenas BRs novos linha a linha em tempo real.",
+  "version": "4.4",
+  "release_date": "2026-11-25",
+  "notes": "Deixa a Coluna C curta e objetiva (sem textos longos) e mantém o detalhe completo do último status na Coluna B.",
   "download_url": "https://github.com/soares4jessica-code/Auditoria-Rastreio/releases/latest"
 }
