@@ -60,7 +60,7 @@ async function iniciarAuditoriaNovosBR() {
   document.body.appendChild(banner);
 
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-  const regexCodigoBR = /^BR[A-Z0-9](6,)$/i;
+  const regexCodigoBR = /^BR[A-Z0-9]{6,}$/i;
 
   function obterFormulaInput() {
     return document.querySelector("#t-formula-bar-input .cell-input") ||
@@ -136,19 +136,10 @@ async function iniciarAuditoriaNovosBR() {
         continue;
       }
 
-      // Checa B, C, D e E: se qualquer coluna de resultado já tiver conteúdo válido, pula a linha inteira
-      const cols = ["B", "C", "D", "E"];
-      let jaTemResultado = false;
-      for (const col of cols) {
-        await irParaCelula(`${col}${linha}`);
-        const valCol = lerValorCelulaAtual();
-        if (valCol && !valCol.startsWith("Erro:")) {
-          jaTemResultado = true;
-          break;
-        }
-      }
+      await irParaCelula(`B${linha}`);
+      const valorB = lerValorCelulaAtual();
 
-      if (jaTemResultado) {
+      if (valorB && !valorB.startsWith("Erro:")) {
         puladosJaPreenchidos++;
         banner.textContent = `Linha ${linha} (${valorA}): Já preenchido (${puladosJaPreenchidos} pulados)...`;
         linha++;
@@ -162,6 +153,7 @@ async function iniciarAuditoriaNovosBR() {
       });
 
       if (resposta && resposta.sucesso && Array.isArray(resposta.dados)) {
+        const cols = ["B", "C", "D", "E"];
         for (let i = 0; i < cols.length; i++) {
           const valLimpo = String(resposta.dados[i] ?? "").replace(/[\r\n\t]+/g, " ").trim();
           await escreverNaCelula(`${cols[i]}${linha}`, valLimpo);
