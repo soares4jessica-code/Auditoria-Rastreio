@@ -1,6 +1,6 @@
 {
-  "version": "4.4",
-  "release_date": "2026-11-25",
-  "notes": "Deixa a Coluna C curta e objetiva (sem textos longos) e mantém o detalhe completo do último status na Coluna B.",
+  "version": "4.5",
+  "release_date": "2026-11-26",
+  "notes": "Ignora Evento_1006 (Calculation Task) no Status Atual da Coluna B para exibir sempre o evento operacional real anterior (ex: Missing).",
   "download_url": "https://github.com/soares4jessica-code/Auditoria-Rastreio/releases/latest"
 }
