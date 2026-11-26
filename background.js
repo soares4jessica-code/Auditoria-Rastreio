@@ -76,7 +76,8 @@ const MAPA_STATUS_SPX = {
   581: "Missing / Extravio",
   616: "On-Hold / Retido no Hub",
   648: "LMHub Sorted (Na Gaiola)",
-  934: "LMHub Atribuindo / Atribuído"
+  934: "LMHub Atribuindo / Atribuído",
+  1006: "Calculation Task"
 };
 
 function nomeLegivelEvento(ev) {
@@ -130,11 +131,17 @@ function extrairMotoristaEvento(ev) {
 
 function isEventoAutomaticoSistema(ev) {
   const nm = nomeLegivelEvento(ev).toUpperCase();
-  const msg = (ev.message || "").toUpperCase();
-  return nm.includes("CALCULATION_TASK") ||
+  const bruto = (ev.status_name || "").toUpperCase();
+  const track = (ev.tracking_name || "").toUpperCase();
+  const msg = (ev.message || "").toUpperCase().trim();
+  return ev.status === 1006 ||
+         nm.includes("1006") ||
+         nm.includes("CALCULATION_TASK") ||
          nm.includes("CALCULATION TASK") ||
          nm.includes("CONFIRM CALCULATION") ||
-         msg.startsWith("CTBR");
+         bruto.includes("CALCULATION") ||
+         track.includes("CALCULATION") ||
+         /^CTBR[A-Z0-9]+$/.test(msg);
 }
 
 function processarDadosCompletos(jsonTrack, jsonExc) {
@@ -142,8 +149,12 @@ function processarDadosCompletos(jsonTrack, jsonExc) {
   const eventos = extrairEventos(data.tracking_list || []);
   eventos.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
 
-  // Coluna B: Última informação completa do SPX (data/hora, status, detalhe/mensagem e operador)
-  const ultimoEvento = eventos.length > 0 ? eventos[eventos.length - 1] : null;
+  // Filtra eventos reais (ignorando Evento_1006 / Calculation Task no final da timeline)
+  const eventosReais = eventos.filter(ev => !isEventoAutomaticoSistema(ev));
+  const ultimoEvento = eventosReais.length > 0
+    ? eventosReais[eventosReais.length - 1]
+    : (eventos.length > 0 ? eventos[eventos.length - 1] : null);
+
   let statusAtual = "Sem registros";
 
   if (ultimoEvento) {
@@ -157,8 +168,8 @@ function processarDadosCompletos(jsonTrack, jsonExc) {
       statusAtual = `${baseUltimo} [Rota ${rotaUlt}]`;
     } else if (motUlt) {
       statusAtual = `${baseUltimo} [Mot: ${motUlt}]`;
-    } else if ((nmUlt.includes("EHA RESOLVED") || nmUlt.includes("TICKET SUBMITTED") || nmUlt.includes("EXCEPTION")) && eventos.length >= 2) {
-      const anteriorComMotivo = [...eventos].slice(0, -1).reverse().find(e => {
+    } else if ((nmUlt.includes("EHA RESOLVED") || nmUlt.includes("TICKET SUBMITTED") || nmUlt.includes("EXCEPTION")) && eventosReais.length >= 2) {
+      const anteriorComMotivo = [...eventosReais].slice(0, -1).reverse().find(e => {
         const m = (e.message || "").trim();
         return m && m.length < 55 && !/all exceptions|ticket submitted|parcel arrived|pedido chegou/i.test(m);
       });
