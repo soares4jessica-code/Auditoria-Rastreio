@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "SPX - Auditoria Direta Google Sheets",
-  "version": "4.4",
-  "description": "Auditoria SPX enxuta: Coluna C direta e limpa, Coluna B com último status completo",
+  "version": "4.5",
+  "description": "Auditoria SPX: ignora Evento_1006 (Calculation Task) no Status Atual trazendo o status real anterior (ex: Missing)",
   "permissions": [
     "activeTab",
     "scripting",
